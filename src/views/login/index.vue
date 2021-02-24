@@ -13,10 +13,11 @@
            如果验证通过，会触发 submit 事件
            如果验证失败，不会触发 submit
      -->
-    <van-form @submit="onSubmit">
+    <!-- 手机号 -->
+    <van-form @submit="onSubmit" ref="loginForm">
       <van-field
         v-model="user.mobile"
-        name="手机号"
+        name="mobile"
         placeholder="请输入手机号"
         :rules="userFormRules.mobile"
         type="number"
@@ -24,9 +25,10 @@
       >
         <i slot="left-icon" class="toutiao toutiao-shouji"></i>
       </van-field>
+      <!-- 验证码 -->
       <van-field
         v-model="user.code"
-        name="验证码"
+        name="code"
         placeholder="验证码"
         :rules="userFormRules.code"
         type="number"
@@ -34,7 +36,20 @@
       >
         <i slot="left-icon" class="toutiao toutiao-yanzhengma"></i>
         <template #button>
-          <van-button class="send-sms-btn" round size="small" type="default"
+          <van-count-down
+            v-if="isCountDownShow"
+            :time="1000 * 5"
+            format="ss s"
+            @finish="isCountDownShow = false"
+          ></van-count-down>
+          <van-button
+            v-else
+            @click="onSendSms"
+            native-type="button"
+            class="send-sms-btn"
+            round
+            size="small"
+            type="default"
             >发送验证码</van-button
           >
         </template>
@@ -50,7 +65,7 @@
 </template>
 
 <script>
-import { login } from '@/api/user.js'
+import { login, sendSms } from '@/api/user.js'
 export default {
   name: 'LoginPage',
 
@@ -83,7 +98,8 @@ export default {
             message: '验证码格式错误'
           }
         ]
-      }
+      },
+      isCountDownShow: false
     }
   },
   computed: {},
@@ -99,14 +115,38 @@ export default {
         duration: 0
       })
       try {
-        const res = await login(user)
-        console.log('登录成功', res)
+        const { data } = await login(user)
+        // 设置数据到 Vuex
+        this.$store.commit('setUser', data.data)
         this.$toast.success('登录成功')
       } catch (err) {
         if (err.response.status === 400) {
           this.$toast.fail('手机号或验证码错误')
         } else {
           this.$toast.fail('登录失败，请稍后重试')
+        }
+      }
+    },
+    async onSendSms () {
+      // console.log('onSendSms')
+      try {
+        await this.$refs.loginForm.validate('mobile')
+      } catch (err) {
+        return console.log('验证失败', err)
+      }
+      // 2. 验证通过，显示倒计时
+      this.isCountDownShow = true
+      // 3. 请求发送验证码
+      try {
+        await sendSms(this.user.mobile)
+        this.$toast('发送成功')
+      } catch (err) {
+        // 发送失败，关闭倒计时
+        this.isCountDownShow = false // 发送失败，关闭倒计时
+        if (err.response.status === 429) {
+          this.$toast('发送太频繁了，请稍后重试')
+        } else {
+          this.$toast('发送失败，请稍后重试')
         }
       }
     }
