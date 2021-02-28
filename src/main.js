@@ -6,6 +6,7 @@ import './styles/index.less'
 import Vant from 'vant'
 import 'vant/lib/index.css'
 import 'amfe-flexible'
+import './utils/dayjs.js'
 Vue.use(Vant)
 Vue.config.productionTip = false
 

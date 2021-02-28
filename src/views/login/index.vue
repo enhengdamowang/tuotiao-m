@@ -1,7 +1,9 @@
 <template>
   <div class="login-container">
     <!-- 导航栏 -->
-    <van-nav-bar class="page-nav-bar" title="登录" />
+    <van-nav-bar class="page-nav-bar" title="登录" >
+    <van-icon v-if="$route.query.redirect" slot="left" name="cross" @click="$router.back()"></van-icon>
+    </van-nav-bar>
     <!-- /导航栏 -->
 
     <!-- 登录表单 -->
@@ -74,7 +76,7 @@ export default {
   data () {
     return {
       user: {
-        mobile: '13411111111',
+        mobile: '13911111111',
         code: '246810'
       },
       userFormRules: {
@@ -119,6 +121,10 @@ export default {
         // 设置数据到 Vuex
         this.$store.commit('setUser', data.data)
         this.$toast.success('登录成功')
+        // this.$router.back()
+        // console.log(this.$route.query.redirect) // '/my'
+        // 从哪里过来的，直接到哪里，获取不到 redirect 数据，到首页
+        this.$router.push(this.$route.query.redirect || '/')
       } catch (err) {
         if (err.response.status === 400) {
           this.$toast.fail('手机号或验证码错误')

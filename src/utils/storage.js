@@ -1,19 +1,21 @@
 // 封装本地存储操作
 // 存
-export const getItem = name => {
-  const data = window.localStorage.getItem(name)
+// 存
+export const setItem = (key, value) => {
+  if (typeof value === 'object') {
+    value = JSON.stringify(value)
+  }
+  localStorage.setItem(key, value)
+}
+
+// 取
+export const getItem = key => {
+  const data = localStorage.getItem(key)
   try {
     return JSON.parse(data)
   } catch (err) {
     return data
   }
-}
-// 取
-export const setItem = (name, value) => {
-  if (typeof value === 'object') {
-    value = JSON.stringify(value)
-  }
-  window.localStorage.setItem(name, value)
 }
 // 删
 export const removeItem = name => {
